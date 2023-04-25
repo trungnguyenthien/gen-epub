@@ -5,14 +5,31 @@ Array.prototype.sample = function () {
 const epub = require('epub-gen');
 const path = require('path');
 const fs = require('fs');
-const argv = require('yargs')
-  .demandOption(['content', 'cover', 'output'])
-  .argv;
+const argv = require('yargs').demandOption([
+  'content',
+  'cover',
+  'output',
+  'single'
+]).argv;
 
-const contentFiles = fs.readdirSync(argv.content) //.filter(f => fs.statSync(f).isFile());
-const coverFiles = fs.readdirSync(argv.cover) //.filter(f => fs.statSync(f).isFile());
+let contentFiles = Array()
+let coverFiles = Array()
+if (argv.single == 1) {
+  contentFiles.push(argv.content)
+  if (argv.cover) {
+    coverFiles.push(argv.cover)
+  }
+} else {
+  contentFiles = fs.readdirSync(argv.content)
+  if (argv.cover) {
+    coverFiles = fs.readdirSync(argv.cover)
+  }
+}
 
 function randomCover() {
+  if (!argv.cover) {
+    return null;
+  }
   return `${argv.cover}/${coverFiles.sample()}`
 }
 
@@ -29,17 +46,11 @@ contentFiles.forEach(f => {
 
   const book = {
     title: chaps[0].title,
-    // author: 'John Doe',
     cover: randomCover(),
     content: outputContent
   };
 
   const otuputPath = path.join(__dirname, argv.output, `${chaps[0].title}.epub`)
-  // const options = {
-  //   epubVersion: 3,
-  //   filename: `${chaps[0].title}.epub`,
-  //   outputDir: otuputPath // Thư mục lưu file EPUB mới tạo
-  // };
   new epub(book, otuputPath);
 
   console.log(`OUTPUT: ${otuputPath}`)
